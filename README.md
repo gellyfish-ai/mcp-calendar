@@ -64,16 +64,16 @@ cat > ~/Library/LaunchAgents/com.gellyfish.mcp-calendar.plist << 'PLIST'
     <string>com.gellyfish.mcp-calendar</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/gellyfish/Workspace/mcp-calendar/.build/release/mcp-calendar</string>
+        <string>~/.local/bin/mcp-calendar</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
     <key>KeepAlive</key>
     <true/>
     <key>StandardOutPath</key>
-    <string>/Users/gellyfish/Library/Logs/mcp-calendar.log</string>
+    <string>~/Library/Logs/mcp-calendar.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/gellyfish/Library/Logs/mcp-calendar.log</string>
+    <string>~/Library/Logs/mcp-calendar.log</string>
 </dict>
 </plist>
 PLIST
