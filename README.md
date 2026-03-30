@@ -24,9 +24,23 @@ EventKit requires TCC (Transparency, Consent, and Control) permissions. Run the 
 swift run mcp-calendar --setup
 ```
 
-macOS will prompt you to grant Calendar and Reminders access. You can also grant permissions manually in **System Settings > Privacy & Security > Calendar/Reminders**.
+This triggers the initial TCC request. **The prompt may not appear** — especially if running via SSH or a background process.
 
-**Important:** If you rebuild the binary, macOS may revoke permissions and require re-granting.
+**The reliable way to grant permissions:**
+1. Run `--setup` once (may or may not show a prompt)
+2. Go to **System Settings → Privacy & Security → Calendar** → find `mcp-calendar` → toggle ON
+3. Go to **System Settings → Privacy & Security → Reminders** → find `mcp-calendar` → toggle ON
+
+**CRITICAL:** Do NOT rely on running from iTerm or SSH to grant permissions. TCC grants permissions per-binary — running from iTerm grants to iTerm, not to mcp-calendar. Always verify and toggle in System Settings.
+
+**If you rebuild** the binary, macOS may revoke permissions — re-grant in System Settings.
+
+Verify TCC status:
+```bash
+sqlite3 ~/Library/Application\ Support/com.apple.TCC/TCC.db \
+  "SELECT client, auth_value FROM access WHERE service = 'kTCCServiceCalendar'"
+# auth_value: 0 = denied, 2 = granted
+```
 
 ### 3. Run
 
