@@ -36,6 +36,64 @@ swift run mcp-calendar
 
 The server starts on `http://127.0.0.1:8201` by default.
 
+### 4. Install as launchd daemon (recommended)
+
+Run as a persistent macOS daemon that starts on boot and restarts on crash:
+
+```bash
+cat > ~/Library/LaunchAgents/com.gellyfish.mcp-calendar.plist << 'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.gellyfish.mcp-calendar</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/gellyfish/Workspace/mcp-calendar/.build/release/mcp-calendar</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/gellyfish/Library/Logs/mcp-calendar.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/gellyfish/Library/Logs/mcp-calendar.log</string>
+</dict>
+</plist>
+PLIST
+
+# Load the daemon
+launchctl load ~/Library/LaunchAgents/com.gellyfish.mcp-calendar.plist
+
+# Verify it's running
+curl -s http://localhost:8201/health
+```
+
+Manage the daemon:
+```bash
+# Stop
+launchctl unload ~/Library/LaunchAgents/com.gellyfish.mcp-calendar.plist
+
+# Restart (unload + load)
+launchctl unload ~/Library/LaunchAgents/com.gellyfish.mcp-calendar.plist
+launchctl load ~/Library/LaunchAgents/com.gellyfish.mcp-calendar.plist
+
+# Check logs
+tail -f ~/Library/Logs/mcp-calendar.log
+```
+
+### 5. Register in Gellyfish gateway
+
+```sql
+INSERT INTO mcp_servers (id, name, type, command, args, env)
+VALUES ('<uuid>', 'calendar', 'available', 'npx',
+  '["-y", "mcp-remote", "http://localhost:8201/sse", "--allow-http"]', '{}');
+```
+
+Then assign to profiles that need it via `profile_mcps`.
+
 ## Configuration
 
 Environment variables:
