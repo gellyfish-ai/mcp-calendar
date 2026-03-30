@@ -1,0 +1,14 @@
+# NOTE: EventKit requires macOS + TCC permissions.
+# This compose file is provided for completeness but the MCP server
+# must run natively on macOS to access Calendar/Reminders data.
+# See README.md for native setup instructions.
+
+services:
+  mcp-calendar:
+    build: .
+    ports:
+      - "8201:8201"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8201
+    restart: unless-stopped
