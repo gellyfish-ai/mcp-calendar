@@ -183,6 +183,40 @@ actor EventKitManager {
         return try serialize(result)
     }
 
+    func createReminderList(title: String) async throws -> Data {
+        guard await requestReminderAccess() else {
+            throw MCPError.permissionDenied("Reminders access not granted")
+        }
+        store.refreshSourcesIfNecessary()
+
+        let list = EKCalendar(for: .reminder, eventStore: store)
+        list.title = title
+
+        // Use the default reminder source, falling back to iCloud or any available source
+        let source: EKSource
+        if let defaultSource = store.defaultCalendarForNewReminders()?.source {
+            source = defaultSource
+        } else if let icloud = store.sources.first(where: { $0.sourceType == .calDAV }) {
+            source = icloud
+        } else if let local = store.sources.first(where: { $0.sourceType == .local }) {
+            source = local
+        } else {
+            throw MCPError.notFound("No available source for creating reminder lists")
+        }
+        list.source = source
+
+        try store.saveCalendar(list, commit: true)
+        markNeedsRefresh()
+
+        let result: [String: Any] = [
+            "id": list.calendarIdentifier,
+            "title": list.title,
+            "source": list.source?.title ?? "Unknown",
+            "created": true,
+        ]
+        return try serialize(result)
+    }
+
     // MARK: - Reminders
 
     func listReminders(listId: String?, includeCompleted: Bool) async throws -> Data {

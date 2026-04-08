@@ -133,6 +133,7 @@ Uses legacy HTTP+SSE transport:
 | `list_events` | List events within a date range |
 | `create_event` | Create a calendar event |
 | `list_reminder_lists` | List all reminder lists |
+| `create_reminder_list` | Create a new reminder list |
 | `list_reminders` | List reminders (optionally filtered by list) |
 | `create_reminder` | Create a reminder with optional due date |
 | `complete_reminder` | Mark a reminder as complete |

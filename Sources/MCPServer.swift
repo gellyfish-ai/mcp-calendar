@@ -143,6 +143,17 @@ final class MCPServer: @unchecked Sendable {
                 ] as [String: Any],
             ],
             [
+                "name": "create_reminder_list",
+                "description": "Create a new reminder list",
+                "inputSchema": [
+                    "type": "object",
+                    "properties": [
+                        "title": ["type": "string", "description": "Name of the new reminder list"],
+                    ] as [String: Any],
+                    "required": ["title"],
+                ] as [String: Any],
+            ],
+            [
                 "name": "list_reminders",
                 "description": "List reminders, optionally filtered by list",
                 "inputSchema": [
@@ -232,6 +243,13 @@ final class MCPServer: @unchecked Sendable {
         case "list_reminder_lists":
             let lists = try await manager.listReminderLists()
             return toolResult(lists)
+
+        case "create_reminder_list":
+            guard let title = arguments["title"] as? String else {
+                throw MCPError.invalidParams("Missing required parameter: title")
+            }
+            let result = try await manager.createReminderList(title: title)
+            return toolResult(result)
 
         case "list_reminders":
             let reminders = try await manager.listReminders(
