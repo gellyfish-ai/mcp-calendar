@@ -190,6 +190,34 @@ final class MCPServer: @unchecked Sendable {
                     "required": ["id"],
                 ] as [String: Any],
             ],
+            [
+                "name": "update_reminder",
+                "description": "Update an existing reminder. Only provided fields are changed.",
+                "inputSchema": [
+                    "type": "object",
+                    "properties": [
+                        "id": ["type": "string", "description": "Reminder ID to update"],
+                        "title": ["type": "string", "description": "New title"],
+                        "dueDate": ["type": "string", "description": "New due date in ISO 8601 format"],
+                        "notes": ["type": "string", "description": "New notes"],
+                        "priority": ["type": "integer", "description": "Priority (0=none, 1=high, 5=medium, 9=low)"],
+                        "isCompleted": ["type": "boolean", "description": "Mark complete (true) or incomplete (false)"],
+                        "listId": ["type": "string", "description": "Move to a different reminder list by ID"],
+                    ] as [String: Any],
+                    "required": ["id"],
+                ] as [String: Any],
+            ],
+            [
+                "name": "delete_reminder",
+                "description": "Delete a reminder",
+                "inputSchema": [
+                    "type": "object",
+                    "properties": [
+                        "id": ["type": "string", "description": "Reminder ID to delete"],
+                    ] as [String: Any],
+                    "required": ["id"],
+                ] as [String: Any],
+            ],
         ]
     }
 
@@ -283,6 +311,36 @@ final class MCPServer: @unchecked Sendable {
                 throw MCPError.invalidParams("Missing required parameter: id")
             }
             let result = try await manager.completeReminder(id: id)
+            return toolResult(result)
+
+        case "update_reminder":
+            guard let id = arguments["id"] as? String else {
+                throw MCPError.invalidParams("Missing required parameter: id")
+            }
+            var dueDate: Date? = nil
+            if let dueDateStr = arguments["dueDate"] as? String {
+                dueDate = formatter.date(from: dueDateStr) ?? fallbackFormatter.date(from: dueDateStr)
+                if dueDate == nil {
+                    throw MCPError.invalidParams("Invalid date format for dueDate")
+                }
+            }
+            let result = try await manager.updateReminder(
+                id: id,
+                title: arguments["title"] as? String,
+                dueDate: dueDate,
+                clearDueDate: false,
+                notes: arguments["notes"] as? String,
+                priority: arguments["priority"] as? Int,
+                isCompleted: arguments["isCompleted"] as? Bool,
+                listId: arguments["listId"] as? String
+            )
+            return toolResult(result)
+
+        case "delete_reminder":
+            guard let id = arguments["id"] as? String else {
+                throw MCPError.invalidParams("Missing required parameter: id")
+            }
+            let result = try await manager.deleteReminder(id: id)
             return toolResult(result)
 
         default:

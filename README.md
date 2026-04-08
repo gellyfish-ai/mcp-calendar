@@ -137,6 +137,8 @@ Uses legacy HTTP+SSE transport:
 | `list_reminders` | List reminders (optionally filtered by list) |
 | `create_reminder` | Create a reminder with optional due date |
 | `complete_reminder` | Mark a reminder as complete |
+| `update_reminder` | Update an existing reminder (title, due date, notes, priority, completion, list) |
+| `delete_reminder` | Delete a reminder |
 
 ## Docker
 

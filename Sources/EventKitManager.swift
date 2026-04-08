@@ -321,6 +321,95 @@ actor EventKitManager {
         return try serialize(dict)
     }
 
+    func updateReminder(
+        id: String,
+        title: String?,
+        dueDate: Date?,
+        clearDueDate: Bool,
+        notes: String?,
+        priority: Int?,
+        isCompleted: Bool?,
+        listId: String?
+    ) async throws -> Data {
+        guard await requestReminderAccess() else {
+            throw MCPError.permissionDenied("Reminders access not granted")
+        }
+
+        guard let reminder = store.calendarItem(withIdentifier: id) as? EKReminder else {
+            throw MCPError.notFound("Reminder not found: \(id)")
+        }
+
+        if let title { reminder.title = title }
+        if let dueDate {
+            reminder.dueDateComponents = Calendar.current.dateComponents(
+                [.year, .month, .day, .hour, .minute], from: dueDate
+            )
+        }
+        if let notes { reminder.notes = notes }
+        if let priority { reminder.priority = priority }
+        if let isCompleted {
+            reminder.isCompleted = isCompleted
+            if isCompleted {
+                reminder.completionDate = Date()
+            } else {
+                reminder.completionDate = nil
+            }
+        }
+        if let listId {
+            guard let cal = store.calendar(withIdentifier: listId) else {
+                throw MCPError.notFound("Reminder list not found: \(listId)")
+            }
+            reminder.calendar = cal
+        }
+
+        try store.save(reminder, commit: true)
+        markNeedsRefresh()
+
+        let isoFormatter = ISO8601DateFormatter()
+        var result: [String: Any] = [
+            "id": reminder.calendarItemIdentifier,
+            "title": reminder.title ?? "",
+            "isCompleted": reminder.isCompleted,
+            "list": reminder.calendar?.title ?? "",
+            "priority": reminder.priority,
+            "updated": true,
+        ]
+        if let dueDate = reminder.dueDateComponents,
+           let date = Calendar.current.date(from: dueDate) {
+            result["dueDate"] = isoFormatter.string(from: date)
+        }
+        if let completionDate = reminder.completionDate {
+            result["completionDate"] = isoFormatter.string(from: completionDate)
+        }
+        if let notes = reminder.notes, !notes.isEmpty {
+            result["notes"] = notes
+        }
+        return try serialize(result)
+    }
+
+    func deleteReminder(id: String) async throws -> Data {
+        guard await requestReminderAccess() else {
+            throw MCPError.permissionDenied("Reminders access not granted")
+        }
+
+        guard let reminder = store.calendarItem(withIdentifier: id) as? EKReminder else {
+            throw MCPError.notFound("Reminder not found: \(id)")
+        }
+
+        let title = reminder.title ?? ""
+        let reminderId = reminder.calendarItemIdentifier
+
+        try store.remove(reminder, commit: true)
+        markNeedsRefresh()
+
+        let result: [String: Any] = [
+            "id": reminderId,
+            "title": title,
+            "deleted": true,
+        ]
+        return try serialize(result)
+    }
+
     func completeReminder(id: String) async throws -> Data {
         guard await requestReminderAccess() else {
             throw MCPError.permissionDenied("Reminders access not granted")
